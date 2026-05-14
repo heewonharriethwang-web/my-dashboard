@@ -129,7 +129,7 @@ tr:hover{background:rgba(0,0,0,0.02)}
     <div class="sb-date" id="sidebar-date"></div>
   </div>
   <div id="nav-list"></div>
-  <div class="sb-ft"><span class="dot"></span>v5.0 · HTML</div>
+  <div class="sb-ft" id="sb-footer"></div>
 </aside>
 
 <!-- ─── 메인 ─── -->
@@ -147,12 +147,12 @@ tr:hover{background:rgba(0,0,0,0.02)}
       <div class="panel-hdr"><div><div class="panel-title">자산 배분</div></div></div>
       <div style="padding:8px">
         <div class="chart-legend" id="donut-legend"></div>
-        <canvas id="donutChart" height="160"></canvas>
+        <div style="position:relative;height:160px"><canvas id="donutChart"></canvas></div>
       </div>
     </div>
     <div class="panel">
       <div class="panel-hdr"><div><div class="panel-title">자산 크기 TOP 8</div></div></div>
-      <div style="padding:8px"><canvas id="barChart" height="210"></canvas></div>
+      <div style="padding:8px"><div style="position:relative;height:210px"><canvas id="barChart"></canvas></div></div>
     </div>
   </div>
   <div class="panel">
@@ -284,7 +284,7 @@ let extraMonths = 0;
 
 // ─── 부동산 ────────────────────────────────────────────
 const BP = {
-  name:'반포써밋', area:'전용 59㎡ (약 25평)', pprice:2950000000, pdate:'2023년',
+  name:'반포써밋', area:'전용 59㎡ (약 25평)', pprice:2950000000, pdate:'2025년 4월',
   loanOrig:1350000000, loanBase:1329907681,
   get loanRem(){return this.loanBase-(extraMonths*MRT)},
   hw:{rep:10046160,init:1344000000,get tot(){return this.rep+this.init}},
@@ -311,20 +311,23 @@ const SO = {
 const CAR = {name:'포르쉐 마칸 S',year:2023,plate:'166너5359',pprice:88006922,tax:6160480,get tot(){return this.pprice+this.tax},pay:'법인 리스 → 현금 인수'};
 
 // ─── 자산 데이터 ───────────────────────────────────────
+const DATA_UPDATED = '2026년 5월 14일'; // 수동 데이터 최종 업데이트일
 let reValue = 3500000000;
 let assets = [
   {id:1,name:'반포써밋',type:'realestate',ticker:'',qty:1,cost:2950000000,price:2950000000},
-  {id:2,name:'포르쉐 마칸 S',type:'car',ticker:'',qty:1,cost:CAR.tot,price:CAR.tot},
-  {id:3,name:'퇴직연금(채권)',type:'pension_bond',ticker:'',qty:1,cost:53963459,price:53963459},
-  {id:4,name:'퇴직연금(S&P)',type:'pension_snp',ticker:'',qty:1,cost:39228920,price:39228920},
-  {id:5,name:'퇴직금',type:'severance',ticker:'',qty:1,cost:30819287,price:30819287},
+  {id:2,name:'포르쉐 마칸 S',type:'car',ticker:'',qty:1,cost:CAR.tot,price:80000000},
+  {id:3,name:'퇴직연금(채권)',type:'pension_bond',ticker:'',qty:1,cost:53976355,price:53976355},
+  {id:4,name:'퇴직연금(S&P)',type:'pension_snp',ticker:'',qty:1,cost:39854140,price:39854140},
+  {id:5,name:'퇴직금(기정산)',type:'severance',ticker:'',qty:1,cost:85836940,price:85836940},
+  {id:15,name:'퇴직금(임원2배, 2024~2029)',type:'severance',ticker:'',qty:1,cost:104197483,price:104197483},
   {id:6,name:'연금저축',type:'pension_saving',ticker:'',qty:1,cost:6000000,price:6000000},
   {id:7,name:'코인',type:'crypto',ticker:'BTC',qty:1,cost:8078015,price:8078015},
   {id:8,name:'VOO',type:'stock-us',ticker:'VOO',qty:1,cost:9993068,price:9993068},
   {id:9,name:'삼성전자',type:'stock',ticker:'005930',qty:1,cost:144010000,price:144010000},
   {id:10,name:'SK하이닉스',type:'stock',ticker:'000660',qty:1,cost:55470000,price:55470000},
   {id:11,name:'삼성SDI',type:'stock',ticker:'006400',qty:1,cost:31200000,price:31200000},
-  {id:12,name:'계좌',type:'account',ticker:'',qty:1,cost:3439220,price:3439220},
+  {id:12,name:'농협',type:'account',ticker:'',qty:1,cost:7166634,price:7166634},
+  {id:16,name:'신한',type:'account',ticker:'',qty:1,cost:1720734,price:1720734},
   {id:13,name:'현금',type:'cash',ticker:'',qty:1,cost:550000,price:550000},
   {id:14,name:'압타바이오 스톡옵션',type:'stockoption',ticker:'APTABIO',qty:SO.shares,cost:SO.strike,price:SO.strike},
   {id:100,name:'부동산 대출',type:'debt',ticker:'',qty:1,cost:BP.loanRem,price:BP.loanRem},
@@ -390,6 +393,7 @@ function showPage(key){
 
 function renderSidebar(c){
   document.getElementById('sidebar-date').textContent=dateStr;
+  document.getElementById('sb-footer').innerHTML=`<span class="dot"></span>v5.1<br><span style="opacity:0.7">📅 수동 데이터: ${DATA_UPDATED}</span>`;
   const el=document.getElementById('nav-list');
   el.innerHTML='';
   CATS.forEach(cat=>{
@@ -464,7 +468,12 @@ function renderDashboard(c){
   // 부채
   const debts=assets.filter(a=>a.type==='debt');
   if(debts.length){
-    document.getElementById('debt-section').innerHTML=`<div class="panel"><div class="panel-hdr"><div><div class="panel-title">부채</div></div><span style="font-size:11px;color:var(--down)">-${fmtShort(c.totalD)}원</span></div>${makeTable(debts,c.totalA,true)}</div>`;
+    document.getElementById('debt-section').innerHTML=`<div class="panel"><div class="panel-hdr"><div><div class="panel-title">부채</div></div><span style="font-size:11px;color:var(--down)">-${fmtShort(c.totalD)}원</span></div>${makeTable(debts,c.totalA,true)}</div>
+    <div style="margin-top:14px;padding:10px 16px;background:var(--bg3);border-radius:8px;font-size:10px;color:var(--text3);line-height:1.8">
+      📅 수동 데이터 최종 업데이트: <b style="color:var(--text2)">${DATA_UPDATED}</b><br>
+      수동 항목: 부동산 호가·대출, 자동차 시세, 퇴직연금, 퇴직금, 연금저축, 계좌, 현금<br>
+      자동 항목 (API 연동 예정): 국내주식, 해외주식, 코인
+    </div>`;
   }
 }
 
@@ -528,11 +537,11 @@ function renderRealestate(c){
 
 function renderCar(){
   document.getElementById('car-summary').innerHTML=[
-    mkCard(CAR.name,fmtShort(CAR.tot)+'원',CAR.year+'년식'),
+    mkCard(CAR.name,'8,000만원',CAR.year+'년식'),
     mkCard('차량번호',CAR.plate,'포르쉐 마칸 S'),
     mkCard('구매 방식',CAR.pay,'<span style="color:var(--up)">대출 없음</span>'),
   ].join('');
-  const rows=[['차량명',CAR.name],['연식',CAR.year+'년'],['차량번호',CAR.plate],['인수가',`₩${fmt(CAR.pprice)}`],['취득세',`₩${fmt(CAR.tax)}`],['총 취득 비용',`₩${fmt(CAR.tot)}`],['구매 방식',CAR.pay]];
+  const rows=[['차량명',CAR.name],['연식',CAR.year+'년'],['차량번호',CAR.plate],['인수가',`₩${fmt(CAR.pprice)}`],['취득세',`₩${fmt(CAR.tax)}`],['총 취득 비용',`₩${fmt(CAR.tot)}`],['현재 시세 (추정)',`₩${fmt(80000000)}`],['감가상각',`-₩${fmt(CAR.tot-80000000)}`],['구매 방식',CAR.pay]];
   document.getElementById('car-detail').innerHTML=`<div class="panel-hdr"><div><div class="panel-title">차량 상세 정보</div></div></div><div class="panel-body">${rows.map(([k,v],i)=>`<div style="display:flex;justify-content:space-between;padding:10px 0;${i<rows.length-1?'border-bottom:1px solid var(--border)':''}font-size:11px"><span style="color:var(--text2)">${k}</span><span class="fw">${v}</span></div>`).join('')}</div>`;
 }
 
@@ -574,7 +583,7 @@ function renderCategory(c){
   // 차트 (2개 이상)
   if(items.length>=2){
     const colors=['#4f6ef7','#6c8aff','#f59e0b','#22c55e','#f472b6','#c084fc','#fb923c','#38bdf8','#a78bfa','#2dd4bf'];
-    document.getElementById('cat-chart').innerHTML=`<div class="panel"><div class="panel-hdr"><div><div class="panel-title">${cat.label} 구성</div></div></div><div style="display:flex;align-items:center;gap:20px;padding:10px"><div style="width:50%;height:150px"><canvas id="catDonut"></canvas></div><div style="flex:1">${items.map((a,i)=>
+    document.getElementById('cat-chart').innerHTML=`<div class="panel"><div class="panel-hdr"><div><div class="panel-title">${cat.label} 구성</div></div></div><div style="display:flex;align-items:center;gap:20px;padding:10px"><div style="width:50%;height:150px;position:relative"><canvas id="catDonut"></canvas></div><div style="flex:1">${items.map((a,i)=>
       `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px"><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:2px;background:${colors[i%colors.length]}"></span><span style="color:var(--text2)">${a.name}</span></div><div><span class="fw">${fmtShort(a.qty*a.price)}원</span><span style="color:var(--text3);margin-left:6px;font-size:10px">${total>0?Math.round(a.qty*a.price/total*100):0}%</span></div></div>`
     ).join('')}</div></div></div>`;
     if(chartsAvailable){
@@ -589,6 +598,22 @@ function renderCategory(c){
   }
 
   document.getElementById('cat-table').innerHTML=`<div class="panel-hdr"><div><div class="panel-title">상세 목록</div></div></div>${makeTable(items,c.totalA,true)}`;
+
+  // 퇴직금 페이지 메모
+  if(curPage==='severance'){
+    document.getElementById('cat-table').innerHTML+=`
+    <div class="alert alert-info mt12">
+      ℹ️ <b>임원퇴직금 규정 적용 (오브젝티보 임시주주총회 2024.03.15)</b><br>
+      대표이사/사내이사 지급률: 재임기간 1년당 2개월분<br>
+      2024.03.15 ~ 2029.02.09 (약 59개월) 기준 예상: ₩${fmt(104197483)} → 자산 반영 완료
+    </div>
+    <div class="alert alert-warn" style="margin-top:8px">
+      ⚠️ <b>미확정 — 소급 인정 시 추가 약 ₩108,000,000 가능</b><br>
+      임원퇴직금 규정 시행일이 서류상 2024년으로 기재되었으나, 실제 2019년부터 소급 적용되어야 한다는 논의 중.<br>
+      압타바이오 측 입장: "실적 봐서 판단하겠다" → 확정 시 자산에 추가 반영 예정<br>
+      소급 인정 시 전체 퇴직금: 약 ₩211,957,000 (현재 반영분 대체)
+    </div>`;
+  }
 }
 
 // ─── 카드 헬퍼 ─────────────────────────────────────────
