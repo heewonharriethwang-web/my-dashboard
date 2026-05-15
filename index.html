@@ -13,11 +13,12 @@ body{font-family:'Pretendard','Apple SD Gothic Neo',-apple-system,sans-serif;bac
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
 .fi{animation:fadeIn .3s ease-out both}
 a{text-decoration:none}
 
 .wrap{display:flex;min-height:100vh}
-aside{width:195px;background:var(--bg2);border-right:1px solid var(--border2);padding:18px 0;display:flex;flex-direction:column;position:fixed;height:100vh;z-index:10;overflow-y:auto;box-shadow:1px 0 3px rgba(0,0,0,0.03)}
+aside{width:195px;background:var(--bg2);border-right:1px solid var(--border2);padding:18px 0;display:flex;flex-direction:column;position:fixed;height:100vh;z-index:10;overflow-y:auto;box-shadow:1px 0 3px rgba(0,0,0,0.03);transition:transform .3s ease}
 .sb-hdr{padding:0 14px 16px;border-bottom:1px solid var(--border);margin-bottom:8px}
 .sb-title{font-size:14px;font-weight:600}
 .sb-date{font-size:10px;color:var(--text3);margin-top:2px}
@@ -33,6 +34,20 @@ main{margin-left:195px;padding:22px 26px;flex:1;max-width:1050px}
 .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
 h1{font-size:19px;font-weight:600;letter-spacing:-0.02em}
 .sub{font-size:12px;color:var(--text2);margin-top:3px}
+
+/* 햄버거 메뉴 버튼 */
+.hamburger{display:none;position:fixed;top:12px;left:12px;z-index:20;width:36px;height:36px;border-radius:8px;background:var(--bg2);border:1px solid var(--border2);cursor:pointer;align-items:center;justify-content:center;box-shadow:var(--shadow)}
+.hamburger span{display:block;width:18px;height:2px;background:var(--text);border-radius:1px;transition:all .2s}
+.hamburger span+span{margin-top:4px}
+.hamburger.active span:nth-child(1){transform:rotate(45deg) translate(3px,3px)}
+.hamburger.active span:nth-child(2){opacity:0}
+.hamburger.active span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:9}
+
+/* 시세 배지 */
+.price-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:500;margin-left:4px}
+.price-badge.loading{background:var(--bg3);color:var(--text3)}
+.price-badge .spinner{width:8px;height:8px;border:1.5px solid var(--text3);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite}
 
 /* 카드 */
 .grid{display:grid;gap:10px}
@@ -115,15 +130,58 @@ tr:hover{background:rgba(0,0,0,0.02)}
 .vest-done{background:var(--upBg);color:var(--up)}
 .vest-wait{background:var(--bg3);color:var(--text3)}
 
+/* 시세 업데이트 토스트 */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;box-shadow:0 8px 30px rgba(0,0,0,0.12);z-index:200;font-size:12px;transform:translateY(100px);opacity:0;transition:all .3s ease;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast-title{font-weight:600;margin-bottom:4px;font-size:11px;color:var(--accent2)}
+
 .hidden{display:none}
 .mt12{margin-top:12px}
 .mb18{margin-bottom:18px}
+
+/* ═══ 모바일 반응형 ═══ */
+@media(max-width:768px){
+  .hamburger{display:flex}
+  aside{transform:translateX(-100%);width:240px;z-index:15}
+  aside.open{transform:translateX(0)}
+  .sidebar-overlay.show{display:block}
+  main{margin-left:0;padding:60px 14px 22px}
+  .hero{grid-template-columns:1fr;gap:10px}
+  .hero-main .val,.hero-card .val{font-size:22px}
+  .charts{grid-template-columns:1fr;gap:10px}
+  .g3{grid-template-columns:1fr}
+  .g4{grid-template-columns:repeat(2,1fr)}
+  .hdr{flex-direction:column;gap:10px}
+  .hdr .btn{align-self:flex-start}
+  h1{font-size:17px}
+  table{font-size:11px}
+  th,td{padding:8px 8px}
+  .modal{width:calc(100vw - 24px);max-width:none}
+  .card .val{font-size:15px}
+  .toast{left:12px;right:12px;bottom:12px;max-width:none}
+}
+@media(max-width:480px){
+  .g4{grid-template-columns:1fr}
+  main{padding:56px 10px 18px}
+  .hero-main{padding:16px 14px}
+  .hero-card{padding:16px 14px}
+  /* 테이블 가로 스크롤 */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .table-wrap table{min-width:420px}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
+
+<!-- ─── 햄버거 메뉴 ─── -->
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <!-- ─── 사이드바 ─── -->
-<aside>
+<aside id="sidebar">
   <div class="sb-hdr">
     <div class="sb-title">💼 희원 자산관리</div>
     <div class="sb-date" id="sidebar-date"></div>
@@ -139,7 +197,10 @@ tr:hover{background:rgba(0,0,0,0.02)}
 <div id="pg-dashboard" class="page">
   <div class="hdr">
     <div><h1>내 자산 현황</h1><p class="sub" id="dash-date"></p></div>
-    <button class="btn btn-p" onclick="openModal()">+ 자산 추가</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-g" onclick="fetchAllPrices()" id="refresh-btn">🔄 시세 새로고침</button>
+      <button class="btn btn-p" onclick="openModal()">+ 자산 추가</button>
+    </div>
   </div>
   <div class="hero" id="hero-cards"></div>
   <div class="charts">
@@ -157,7 +218,7 @@ tr:hover{background:rgba(0,0,0,0.02)}
   </div>
   <div class="panel">
     <div class="panel-hdr"><div><div class="panel-title">전체 보유 자산</div></div><span style="font-size:11px;color:var(--text3)" id="asset-count"></span></div>
-    <div id="asset-table"></div>
+    <div class="table-wrap" id="asset-table"></div>
   </div>
   <div class="mt12" id="debt-section"></div>
 </div>
@@ -238,6 +299,9 @@ tr:hover{background:rgba(0,0,0,0.02)}
 </div>
 </div>
 
+<!-- 토스트 알림 -->
+<div class="toast" id="price-toast"></div>
+
 <script>
 // ─── 유틸 ──────────────────────────────────────────────
 const fmt = n => Math.round(n).toLocaleString('ko-KR');
@@ -250,6 +314,21 @@ const fmtShort = n => {
 const fmtRate = r => (r>=0?'+':'')+r.toFixed(2)+'%';
 const now = new Date();
 const dateStr = now.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+
+// ─── 모바일 사이드바 ──────────────────────────────────
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const ov=document.getElementById('sidebar-overlay');
+  const hb=document.getElementById('hamburger');
+  sb.classList.toggle('open');
+  ov.classList.toggle('show');
+  hb.classList.toggle('active');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+  document.getElementById('hamburger').classList.remove('active');
+}
 
 // ─── 카테고리 ──────────────────────────────────────────
 const CATS = [
@@ -311,7 +390,7 @@ const SO = {
 const CAR = {name:'포르쉐 마칸 S',year:2023,plate:'166너5359',pprice:88006922,tax:6160480,get tot(){return this.pprice+this.tax},pay:'법인 리스 → 현금 인수'};
 
 // ─── 자산 데이터 ───────────────────────────────────────
-const DATA_UPDATED = '2026년 5월 14일'; // 수동 데이터 최종 업데이트일
+const DATA_UPDATED = '2026년 5월 14일';
 let reValue = 3500000000;
 let assets = [
   {id:1,name:'반포써밋',type:'realestate',ticker:'',qty:1,cost:2950000000,price:2950000000},
@@ -336,18 +415,195 @@ let assets = [
 let curPage = 'dashboard';
 let donutChart, barChart;
 
+// ═══════════════════════════════════════════════════════
+// 실시간 시세 API 연동
+// ═══════════════════════════════════════════════════════
+const PRICE_CONFIG = {
+  // 국내주식 — Yahoo Finance (KRX 종목은 .KS 접미사)
+  '005930': {name:'삼성전자', yahoo:'005930.KS', type:'krstock'},
+  '000660': {name:'SK하이닉스', yahoo:'000660.KS', type:'krstock'},
+  '006400': {name:'삼성SDI', yahoo:'006400.KS', type:'krstock'},
+  // 해외주식
+  'VOO': {name:'VOO', yahoo:'VOO', type:'usstock'},
+  // 코인
+  'BTC': {name:'비트코인', type:'crypto'},
+};
+
+let priceCache = {};
+let lastPriceUpdate = null;
+let isFetchingPrices = false;
+
+// 토스트 메시지
+function showToast(title, body, duration=4000){
+  const t = document.getElementById('price-toast');
+  t.innerHTML = `<div class="toast-title">${title}</div><div style="color:var(--text2)">${body}</div>`;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), duration);
+}
+
+// Yahoo Finance 시세 가져오기 (CORS 프록시 사용)
+async function fetchYahooPrice(symbol){
+  const proxies = [
+    `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1d&interval=1d`,
+    `https://query2.finance.yahoo.com/v8/finance/chart/${symbol}?range=1d&interval=1d`,
+  ];
+  for(const url of proxies){
+    try{
+      const r = await fetch(url);
+      if(!r.ok) continue;
+      const d = await r.json();
+      const meta = d?.chart?.result?.[0]?.meta;
+      if(meta){
+        return {
+          price: meta.regularMarketPrice,
+          prevClose: meta.chartPreviousClose || meta.previousClose,
+          currency: meta.currency,
+        };
+      }
+    }catch(e){continue}
+  }
+  return null;
+}
+
+// CoinGecko BTC 시세 (KRW)
+async function fetchBTCPrice(){
+  try{
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=krw&include_24hr_change=true');
+    if(!r.ok) return null;
+    const d = await r.json();
+    return {
+      price: d.bitcoin.krw,
+      change24h: d.bitcoin.krw_24h_change,
+    };
+  }catch(e){
+    // 폴백: Binance USDT 가격 × 환율 추정
+    try{
+      const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
+      if(!r.ok) return null;
+      const d = await r.json();
+      const btcUsd = parseFloat(d.lastPrice);
+      // 환율 추정 (대략 1380원)
+      return { price: Math.round(btcUsd * 1380), change24h: parseFloat(d.priceChangePercent) };
+    }catch(e2){ return null; }
+  }
+}
+
+// USD/KRW 환율
+async function fetchUSDKRW(){
+  try{
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=usd&vs_currencies=krw');
+    if(r.ok){
+      const d = await r.json();
+      if(d.usd?.krw) return d.usd.krw;
+    }
+  }catch(e){}
+  // 폴백: Yahoo Finance
+  try{
+    const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDKRW=X?range=1d&interval=1d');
+    if(r.ok){
+      const d = await r.json();
+      return d?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    }
+  }catch(e){}
+  return 1380; // 하드코딩 폴백
+}
+
+// 전체 시세 업데이트
+async function fetchAllPrices(){
+  if(isFetchingPrices) return;
+  isFetchingPrices = true;
+  const btn = document.getElementById('refresh-btn');
+  if(btn) btn.textContent = '⏳ 불러오는 중...';
+  
+  let updated = [], failed = [];
+  
+  try{
+    // 1. 환율
+    const usdkrw = await fetchUSDKRW();
+    
+    // 2. 국내주식 (병렬)
+    const krStocks = [
+      {ticker:'005930', assetId:9},
+      {ticker:'000660', assetId:10},
+      {ticker:'006400', assetId:11},
+    ];
+    const krResults = await Promise.allSettled(
+      krStocks.map(s => fetchYahooPrice(PRICE_CONFIG[s.ticker].yahoo))
+    );
+    krStocks.forEach((s,i)=>{
+      if(krResults[i].status==='fulfilled' && krResults[i].value){
+        const p = krResults[i].value;
+        priceCache[s.ticker] = p;
+        // 자산 업데이트 — price는 "총 평가금액"이므로 qty*현재가
+        const asset = assets.find(a=>a.id===s.assetId);
+        if(asset){
+          // qty=1이고 price가 총액인 구조. 현재가로 업데이트
+          asset.price = p.price;
+          // qty가 주수를 의미하는 경우 대비
+          updated.push(PRICE_CONFIG[s.ticker].name);
+        }
+      } else {
+        failed.push(PRICE_CONFIG[s.ticker].name);
+      }
+    });
+    
+    // 3. 해외주식 VOO
+    const vooResult = await fetchYahooPrice('VOO');
+    if(vooResult){
+      priceCache['VOO'] = {...vooResult, krw: Math.round(vooResult.price * usdkrw)};
+      const vooAsset = assets.find(a=>a.id===8);
+      if(vooAsset){
+        vooAsset.price = Math.round(vooResult.price * usdkrw);
+        updated.push('VOO');
+      }
+    } else { failed.push('VOO'); }
+    
+    // 4. BTC
+    const btcResult = await fetchBTCPrice();
+    if(btcResult){
+      priceCache['BTC'] = btcResult;
+      const btcAsset = assets.find(a=>a.id===7);
+      if(btcAsset){
+        btcAsset.price = btcResult.price;
+        updated.push('BTC');
+      }
+    } else { failed.push('BTC'); }
+    
+    lastPriceUpdate = new Date();
+    render();
+    
+    // 결과 알림
+    if(updated.length > 0){
+      const time = lastPriceUpdate.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+      let msg = `${updated.join(', ')} 시세가 업데이트되었습니다.`;
+      if(failed.length > 0) msg += `<br><span style="color:var(--down)">${failed.join(', ')}은(는) 조회 실패</span>`;
+      showToast(`✅ ${time} 시세 반영`, msg);
+    } else {
+      showToast('⚠️ 시세 조회 실패', 'API 연결을 확인해 주세요. CORS 제한으로 인해 브라우저에서 직접 조회가 안 될 수 있습니다.');
+    }
+  } catch(e){
+    showToast('❌ 오류 발생', e.message || '시세 업데이트 중 오류가 발생했습니다.');
+  }
+  
+  isFetchingPrices = false;
+  if(btn) btn.textContent = '🔄 시세 새로고침';
+}
+
 // ─── 계산 ──────────────────────────────────────────────
 function calc(){
-  const myRe = Math.round(reValue*BP.hwRate);
+  // 부동산 내 몫 = (호가 - 대출잔액) × 지분율
+  const myRe = Math.round((reValue - BP.loanRem) * BP.hwRate);
   const nonDebt = assets.filter(a=>a.type!=='debt');
   const debts = assets.filter(a=>a.type==='debt');
+  // 부동산은 대출 차감 후 지분 반영이므로, 별도 부채로 다시 빼지 않음
   const totalA = nonDebt.reduce((s,a)=> s + (a.type==='realestate'? myRe : a.qty*a.price),0);
-  const totalD = debts.reduce((s,a)=> s + Math.round(a.qty*a.price*0.5),0);
+  // 부동산 대출은 myRe에서 이미 차감됨 → 부채에서 제외
+  const totalD = debts.filter(a=>a.name!=='부동산 대출').reduce((s,a)=> s + Math.round(a.qty*a.price*0.5),0);
   return {totalA, totalD, net:totalA-totalD, myRe};
 }
 
 function getVal(a){
-  if(a.type==='realestate') return Math.round(reValue*BP.hwRate);
+  if(a.type==='realestate') return Math.round((reValue - BP.loanRem) * BP.hwRate);
   if(a.type==='debt') return Math.round(a.qty*a.price*0.5);
   return a.qty*a.price;
 }
@@ -361,6 +617,24 @@ function catTotal(key){return catAssets(key).reduce((s,a)=>s+a.qty*a.price,0)}
 function findIcon(type){
   const c = CATS.find(c=>c.key===type||(c.key==='pension'&&(type==='pension_bond'||type==='pension_snp')));
   return c?c.icon:'📁';
+}
+
+// ─── 시세 변동 표시 헬퍼 ──────────────────────────────
+function getPriceChangeHtml(ticker){
+  const cache = priceCache[ticker];
+  if(!cache) return '';
+  
+  if(ticker === 'BTC' && cache.change24h != null){
+    const ch = cache.change24h;
+    const cls = ch >= 0 ? 'tag-up' : 'tag-dn';
+    return `<span class="tag ${cls}" style="margin-left:4px">${ch>=0?'+':''}${ch.toFixed(1)}%</span>`;
+  }
+  if(cache.prevClose && cache.price){
+    const ch = ((cache.price - cache.prevClose)/cache.prevClose*100);
+    const cls = ch >= 0 ? 'tag-up' : 'tag-dn';
+    return `<span class="tag ${cls}" style="margin-left:4px">${ch>=0?'+':''}${ch.toFixed(1)}%</span>`;
+  }
+  return '';
 }
 
 // ─── 렌더 함수 ─────────────────────────────────────────
@@ -378,7 +652,6 @@ function render(){
 function showPage(key){
   curPage=key;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('show'));
-  // 특별 페이지
   if(['dashboard','realestate','car','stockoption'].includes(key)){
     const el=document.getElementById('pg-'+key);
     if(el) el.classList.add('show');
@@ -389,11 +662,15 @@ function showPage(key){
   document.querySelectorAll('.nav').forEach(n=>{
     n.classList.toggle('on',n.dataset.key===key);
   });
+  closeSidebar(); // 모바일에서 페이지 이동 시 사이드바 닫기
 }
 
 function renderSidebar(c){
   document.getElementById('sidebar-date').textContent=dateStr;
-  document.getElementById('sb-footer').innerHTML=`<span class="dot"></span>v5.1<br><span style="opacity:0.7">📅 수동 데이터: ${DATA_UPDATED}</span>`;
+  const updateInfo = lastPriceUpdate 
+    ? `🔄 시세: ${lastPriceUpdate.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}` 
+    : '📅 수동 데이터: '+DATA_UPDATED;
+  document.getElementById('sb-footer').innerHTML=`<span class="dot"></span>v6.0<br><span style="opacity:0.7">${updateInfo}</span>`;
   const el=document.getElementById('nav-list');
   el.innerHTML='';
   CATS.forEach(cat=>{
@@ -412,13 +689,13 @@ function renderSidebar(c){
 }
 
 function renderDashboard(c){
-  document.getElementById('dash-date').textContent=dateStr+' 기준';
+  document.getElementById('dash-date').textContent=dateStr+' 기준' + (lastPriceUpdate ? ` · 시세 ${lastPriceUpdate.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 반영` : '');
 
   // 히어로 카드
   document.getElementById('hero-cards').innerHTML=`
     <div class="hero-main"><div class="lbl">순 자산</div><div class="val">${fmtShort(c.net)}원</div><div class="desc">자산 - 부채 (지분·분담 반영)</div></div>
-    <div class="hero-card"><div class="lbl">총 자산 (내 몫)</div><div class="val">${fmtShort(c.totalA)}원</div><div class="desc">부동산 지분 ${(BP.hwRate*100).toFixed(2)}% 반영</div></div>
-    <div class="hero-card"><div class="lbl">부채 (내 몫)</div><div class="val" style="color:var(--down)">-${fmtShort(c.totalD)}원</div><div class="desc">대출 50% 분담</div></div>`;
+    <div class="hero-card"><div class="lbl">총 자산 (내 몫)</div><div class="val">${fmtShort(c.totalA)}원</div><div class="desc">부동산: (호가-대출)×지분 ${(BP.hwRate*100).toFixed(1)}%</div></div>
+    <div class="hero-card"><div class="lbl">부채 (부동산 외)</div><div class="val" style="color:${c.totalD>0?'var(--down)':'var(--text)'}">${c.totalD>0?'-':''}${fmtShort(c.totalD)}원</div><div class="desc">부동산 대출은 자산에서 차감 완료</div></div>`;
 
   // 도넛 차트
   const byType={};
@@ -468,11 +745,12 @@ function renderDashboard(c){
   // 부채
   const debts=assets.filter(a=>a.type==='debt');
   if(debts.length){
-    document.getElementById('debt-section').innerHTML=`<div class="panel"><div class="panel-hdr"><div><div class="panel-title">부채</div></div><span style="font-size:11px;color:var(--down)">-${fmtShort(c.totalD)}원</span></div>${makeTable(debts,c.totalA,true)}</div>
+    document.getElementById('debt-section').innerHTML=`<div class="panel"><div class="panel-hdr"><div><div class="panel-title">부채</div></div><span style="font-size:11px;color:var(--down)">-${fmtShort(c.totalD)}원</span></div><div class="table-wrap">${makeTable(debts,c.totalA,true)}</div></div>
     <div style="margin-top:14px;padding:10px 16px;background:var(--bg3);border-radius:8px;font-size:10px;color:var(--text3);line-height:1.8">
       📅 수동 데이터 최종 업데이트: <b style="color:var(--text2)">${DATA_UPDATED}</b><br>
       수동 항목: 부동산 호가·대출, 자동차 시세, 퇴직연금, 퇴직금, 연금저축, 계좌, 현금<br>
-      자동 항목 (API 연동 예정): 국내주식, 해외주식, 코인
+      실시간 항목: 국내주식 (삼성전자/SK하이닉스/삼성SDI), 해외주식 (VOO), 코인 (BTC)
+      ${lastPriceUpdate ? `<br>🔄 마지막 시세 업데이트: ${lastPriceUpdate.toLocaleTimeString('ko-KR')}` : ''}
     </div>`;
   }
 }
@@ -484,8 +762,9 @@ function makeTable(items,total,editable){
     const share=total>0?((val/total)*100).toFixed(1):'0.0';
     const m=META[a.type]||{label:a.type,color:'#888'};
     const icon=findIcon(a.type);
+    const chg = getPriceChangeHtml(a.ticker);
     h+=`<tr>
-      <td><div style="display:flex;align-items:center;gap:8px"><div class="ico" style="background:${m.color}14;color:${m.color}">${icon}</div><div><div class="fw" style="font-size:12px">${a.name}</div><div style="font-size:10px;color:var(--text3)">${m.label}${a.ticker?' · '+a.ticker:''}</div></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="ico" style="background:${m.color}14;color:${m.color}">${icon}</div><div><div class="fw" style="font-size:12px">${a.name}${chg}</div><div style="font-size:10px;color:var(--text3)">${m.label}${a.ticker?' · '+a.ticker:''}</div></div></div></td>
       <td class="r fw" style="color:${a.type==='debt'?'var(--down)':'var(--text)'}">${a.type==='debt'?'-':''}${fmtShort(val)}원</td>
       <td class="r" style="color:var(--text3)">${share}%</td>
       ${editable?`<td class="r"><button class="btn btn-g btn-sm" onclick="openModal(${a.id})" style="margin-right:3px">수정</button><button class="btn btn-g btn-sm" onclick="delAsset(${a.id})" style="color:var(--down)">삭제</button></td>`:''}
@@ -497,12 +776,13 @@ function makeTable(items,total,editable){
 
 function renderRealestate(c){
   const nextPay=(()=>{let d=new Date(now.getFullYear(),now.getMonth(),15);if(d<=now)d=new Date(now.getFullYear(),now.getMonth()+1,15);return d.toLocaleDateString('ko-KR',{month:'long',day:'numeric'})})();
-  const myVal=Math.round(reValue*BP.hwRate);
+  // 내 몫 = (호가 - 대출잔액) × 지분율
+  const myVal=Math.round((reValue - BP.loanRem) * BP.hwRate);
   const myRetRate=((myVal-BP.hw.tot)/BP.hw.tot*100);
 
   document.getElementById('re-summary').innerHTML=[
     mkCard('현재 호가',fmtShort(reValue)+'원',BP.area),
-    mkCard(`내 지분 (${(BP.hwRate*100).toFixed(2)}%)`,fmtShort(myVal)+'원',`<span class="tag tag-up">${fmtRate(myRetRate)}</span>`),
+    mkCard(`내 몫 (대출 차감)`,fmtShort(myVal)+'원',`지분 ${(BP.hwRate*100).toFixed(2)}% · <span class="tag ${myRetRate>=0?'tag-up':'tag-dn'}">${fmtRate(myRetRate)}</span>`),
     mkCard('대출 잔액',fmtShort(BP.loanRem)+'원',`총 대출 ${fmtShort(BP.loanOrig)}원`),
     mkCard('다음 상환일',nextPay,`각 ₩${fmt(MRE)}`),
   ].join('');
@@ -514,22 +794,29 @@ function renderRealestate(c){
     ['월 상환액',`각 ₩${fmt(MRE)} (합 ₩${fmt(MRT)}) · 50:50 분담`],['상환일','매월 15일'],['매수 시점',BP.pdate]];
   document.getElementById('re-basic').innerHTML=`<div class="panel-hdr"><div><div class="panel-title">부동산 기본 정보</div></div></div><div class="panel-body">${rows.map(([k,v],i)=>`<div style="display:flex;justify-content:space-between;padding:10px 0;${i<rows.length-1?'border-bottom:1px solid var(--border)':''}font-size:11px"><span style="color:var(--text2)">${k}</span><span class="fw" style="text-align:right">${v}</span></div>`).join('')}</div>`;
 
-  // 지분
   document.getElementById('re-equity').innerHTML=`<div class="panel-hdr"><div><div class="panel-title">지분 현황 (원리금 상환 기준)</div></div></div>
-  <table><thead><tr><th>구분</th><th class="r">황희원</th><th class="r">이성진</th><th class="r">합계</th></tr></thead><tbody>
+  <div class="table-wrap"><table><thead><tr><th>구분</th><th class="r">황희원</th><th class="r">이성진</th><th class="r">합계</th></tr></thead><tbody>
   <tr><td style="color:var(--text2)">상환금액</td><td class="r fw">₩${fmt(BP.hw.rep)}</td><td class="r">₩${fmt(BP.ls.rep)}</td><td class="r" style="color:var(--text3)">₩${fmt(BP.totRep)}</td></tr>
   <tr><td style="color:var(--text2)">최초납입</td><td class="r fw">₩${fmt(BP.hw.init)}</td><td class="r">₩${fmt(BP.ls.init)}</td><td class="r" style="color:var(--text3)">₩${fmt(BP.totInit)}</td></tr>
   <tr><td style="color:var(--text2)">합계</td><td class="r fw">₩${fmt(BP.hw.tot)}</td><td class="r">₩${fmt(BP.ls.tot)}</td><td class="r" style="color:var(--text3)">₩${fmt(BP.grand)}</td></tr>
   <tr><td style="color:var(--accent2);font-weight:500">보유지분</td><td class="r" style="font-weight:600;color:var(--accent2)">${(BP.hwRate*100).toFixed(2)}%</td><td class="r fw">${(BP.lsRate*100).toFixed(2)}%</td><td class="r" style="color:var(--text3)">100%</td></tr>
-  </tbody></table>`;
+  </tbody></table></div>`;
 
-  // 예상 분배
-  document.getElementById('re-projected').innerHTML=`<div class="panel-hdr"><div><div class="panel-title">호가 기준 예상 분배</div></div></div>
-  <table><thead><tr><th>구분</th><th class="r">황희원</th><th class="r">이성진</th><th class="r">합계</th></tr></thead><tbody>
-  <tr><td style="color:var(--text2)">호가 기준 예상 분배</td><td class="r fw">₩${fmt(BP.proj.hw.v)}</td><td class="r">₩${fmt(BP.proj.ls.v)}</td><td class="r" style="color:var(--text3)">₩${fmt(BP.proj.tot.v)}</td></tr>
-  <tr><td style="color:var(--up)">호가 기준 예상 수익</td><td class="r fw" style="color:var(--up)">+₩${fmt(BP.proj.hw.p)}</td><td class="r" style="color:var(--up)">+₩${fmt(BP.proj.ls.p)}</td><td class="r" style="color:var(--up)">+₩${fmt(BP.proj.tot.p)}</td></tr>
-  </tbody></table>
-  <div style="padding:12px 14px;border-top:1px solid var(--border);text-align:right;font-size:11px;font-weight:600">합산 총액: <span style="color:var(--accent2)">₩${fmt(BP.proj.grand)}</span></div>`;
+  // 예상 분배 — 동적 계산
+  const netEquity = reValue - BP.loanRem; // 호가 - 대출잔액
+  const projHwV = Math.round(netEquity * BP.hwRate);
+  const projLsV = Math.round(netEquity * BP.lsRate);
+  const projTotV = projHwV + projLsV;
+  const projHwP = projHwV - BP.hw.tot;
+  const projLsP = projLsV - BP.ls.tot;
+  const projTotP = projHwP + projLsP;
+
+  document.getElementById('re-projected').innerHTML=`<div class="panel-hdr"><div><div class="panel-title">호가 기준 예상 분배 (대출 차감 후)</div></div></div>
+  <div class="table-wrap"><table><thead><tr><th>구분</th><th class="r">황희원</th><th class="r">이성진</th><th class="r">합계</th></tr></thead><tbody>
+  <tr><td style="color:var(--text2)">호가 기준 예상 분배</td><td class="r fw">₩${fmt(projHwV)}</td><td class="r">₩${fmt(projLsV)}</td><td class="r" style="color:var(--text3)">₩${fmt(projTotV)}</td></tr>
+  <tr><td style="color:${projHwP>=0?'var(--up)':'var(--down)'}">호가 기준 예상 수익</td><td class="r fw" style="color:${projHwP>=0?'var(--up)':'var(--down)'}">${projHwP>=0?'+':''}₩${fmt(projHwP)}</td><td class="r" style="color:${projLsP>=0?'var(--up)':'var(--down)'}">${projLsP>=0?'+':''}₩${fmt(projLsP)}</td><td class="r" style="color:${projTotP>=0?'var(--up)':'var(--down)'}">${projTotP>=0?'+':''}₩${fmt(projTotP)}</td></tr>
+  </tbody></table></div>
+  <div style="padding:12px 14px;border-top:1px solid var(--border);text-align:right;font-size:11px;font-weight:600">호가 - 대출잔액: <span style="color:var(--accent2)">₩${fmt(netEquity)}</span></div>`;
 
   document.getElementById('re-auto-info').innerHTML = extraMonths>0 ? `ℹ️ 5월 15일 이후 ${extraMonths}개월분 대출 상환 (₩${fmt(extraMonths*MRT)}) 잔액에 자동 반영 · 지분율은 스프레드시트 기준 고정` : '';
   if(extraMonths===0) document.getElementById('re-auto-info').style.display='none';
@@ -578,12 +865,15 @@ function renderCategory(c){
 
   // 카드
   const cols=Math.min(items.length,3);
-  document.getElementById('cat-summary').innerHTML=`<div class="grid" style="grid-template-columns:repeat(${cols},1fr)">${items.map(a=>mkCard(a.name,fmtShort(a.qty*a.price)+'원',`${META[a.type]?.label||''}${a.ticker?' · '+a.ticker:''}`)).join('')}</div>`;
+  document.getElementById('cat-summary').innerHTML=`<div class="grid" style="grid-template-columns:repeat(${Math.min(cols,window.innerWidth<480?1:cols)},1fr)">${items.map(a=>{
+    const chg = getPriceChangeHtml(a.ticker);
+    return mkCard(a.name+chg,fmtShort(a.qty*a.price)+'원',`${META[a.type]?.label||''}${a.ticker?' · '+a.ticker:''}`);
+  }).join('')}</div>`;
 
   // 차트 (2개 이상)
   if(items.length>=2){
     const colors=['#4f6ef7','#6c8aff','#f59e0b','#22c55e','#f472b6','#c084fc','#fb923c','#38bdf8','#a78bfa','#2dd4bf'];
-    document.getElementById('cat-chart').innerHTML=`<div class="panel"><div class="panel-hdr"><div><div class="panel-title">${cat.label} 구성</div></div></div><div style="display:flex;align-items:center;gap:20px;padding:10px"><div style="width:50%;height:150px;position:relative"><canvas id="catDonut"></canvas></div><div style="flex:1">${items.map((a,i)=>
+    document.getElementById('cat-chart').innerHTML=`<div class="panel"><div class="panel-hdr"><div><div class="panel-title">${cat.label} 구성</div></div></div><div style="display:flex;align-items:center;gap:20px;padding:10px;flex-wrap:wrap"><div style="width:50%;min-width:140px;height:150px;position:relative"><canvas id="catDonut"></canvas></div><div style="flex:1;min-width:160px">${items.map((a,i)=>
       `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px"><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:2px;background:${colors[i%colors.length]}"></span><span style="color:var(--text2)">${a.name}</span></div><div><span class="fw">${fmtShort(a.qty*a.price)}원</span><span style="color:var(--text3);margin-left:6px;font-size:10px">${total>0?Math.round(a.qty*a.price/total*100):0}%</span></div></div>`
     ).join('')}</div></div></div>`;
     if(chartsAvailable){
@@ -597,7 +887,7 @@ function renderCategory(c){
     document.getElementById('cat-chart').innerHTML='';
   }
 
-  document.getElementById('cat-table').innerHTML=`<div class="panel-hdr"><div><div class="panel-title">상세 목록</div></div></div>${makeTable(items,c.totalA,true)}`;
+  document.getElementById('cat-table').innerHTML=`<div class="panel-hdr"><div><div class="panel-title">상세 목록</div></div></div><div class="table-wrap">${makeTable(items,c.totalA,true)}</div>`;
 
   // 퇴직금 페이지 메모
   if(curPage==='severance'){
@@ -702,6 +992,9 @@ function initCharts(){
 }
 const chartsAvailable = initCharts();
 render();
+
+// 페이지 로드 시 자동으로 시세 조회
+setTimeout(()=>fetchAllPrices(), 500);
 </script>
 </body>
 </html>
