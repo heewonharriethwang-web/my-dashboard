@@ -1,0 +1,41 @@
+name: 시세 자동 업데이트
+
+on:
+  schedule:
+    # KST 기준 평일 오전 9시 30분 (장 개장 직후)
+    - cron: '30 0 * * 1-5'
+    # KST 기준 평일 오후 4시 (장 마감 직후)
+    - cron: '0 7 * * 1-5'
+    # KST 기준 매일 오전 8시 (코인은 24시간이라 주말 포함)
+    - cron: '0 23 * * *'
+  workflow_dispatch:  # 수동 실행도 가능
+
+jobs:
+  update-prices:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 레포 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: yfinance 설치
+        run: pip install yfinance
+
+      - name: 시세 업데이트 실행
+        run: python update_prices.py
+
+      - name: 변경사항 커밋 & 푸시
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          # 변경사항이 있을 때만 커밋
+          git diff --cached --quiet || git commit -m "📈 시세 자동 업데이트 $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
+          git push
